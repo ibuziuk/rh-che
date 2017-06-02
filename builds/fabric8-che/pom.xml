@@ -242,12 +242,12 @@
                                         <requireProperty>
                                             <property>project.parent.version</property>
                                             <regex>${che.version}</regex>
-                                            <regexMessage>The version of the
+                                            <message>The version of the
                                                 parent pom (${project.parent.version}) is not
                                                 the same as the one specified by
                                                 the 'che.version' property
                                                 (${che.version}) that is defined
-                                                in the Git repository root build ('rh-che/pom.xml')</regexMessage>
+                                                in the Git repository root build ('rh-che/pom.xml')</message>
                                         </requireProperty>
                                     </rules>
                                 </configuration>
@@ -273,17 +273,19 @@
                         <executions>
                             <execution>
                                 <id>alwaysFail</id>
-                                <phase>initialize</phase>
+                                <phase>validate</phase>
                                 <goals>
                                     <goal>enforce</goal>
                                 </goals>
                                 <configuration>
+                                    <rules>
                                         <requireProperty>
                                             <property>startedByInvoker</property>
                                             <regex>true</regex>
-                                            <regexMessage>The build should always be run from the root of the Git repository
-                                                ('rh-che/pom.xml')</regexMessage>
+                                            <message>The build should always be run from the root of the Git repository
+                                                ('rh-che/pom.xml'). See the Readme for more details.</message>
                                         </requireProperty>
+                                    </rules>
                                 </configuration>
                             </execution>
                         </executions>
