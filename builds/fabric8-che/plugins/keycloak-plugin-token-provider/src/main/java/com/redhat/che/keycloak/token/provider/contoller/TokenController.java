@@ -15,32 +15,72 @@ import java.io.IOException;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.eclipse.che.api.auth.shared.dto.OAuthToken;
 import org.eclipse.che.api.core.BadRequestException;
 import org.eclipse.che.api.core.ConflictException;
 import org.eclipse.che.api.core.ForbiddenException;
 import org.eclipse.che.api.core.NotFoundException;
 import org.eclipse.che.api.core.ServerException;
 import org.eclipse.che.api.core.UnauthorizedException;
+import org.eclipse.che.api.core.rest.annotations.Required;
+import org.eclipse.che.commons.env.EnvironmentContext;
+import org.eclipse.che.security.oauth.OAuthAuthenticator;
+import org.eclipse.che.security.oauth.OAuthAuthenticatorProvider;
 
 import com.redhat.che.keycloak.token.provider.exception.KeycloakException;
+import com.redhat.che.keycloak.token.provider.oauth.OpenShiftOAuthAuthenticator;
 import com.redhat.che.keycloak.token.provider.service.KeycloakTokenProvider;
 import com.redhat.che.keycloak.token.provider.validator.KeycloakTokenValidator;
 
 @Path("/token")
 @Singleton
-public class KeycloakTokenController {
+public class TokenController {
 
     @Inject
     private KeycloakTokenProvider tokenProvider;
 
     @Inject
     private KeycloakTokenValidator validator;
+
+    @Inject
+    protected OAuthAuthenticatorProvider providers;
+
+    @POST
+    @Path("/github")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public void setToken(@Required @QueryParam("oauth_provider") String oauthProvider,
+                         OAuthToken token) throws ServerException {
+
+        if (token == null) {
+            throw new ServerException("No token provided");
+        }
+
+        OAuthAuthenticator provider = providers.getAuthenticator(oauthProvider);
+
+        if (provider == null) {
+            throw new ServerException("\"" + oauthProvider + "\" oauth provider not registered");
+        } else if (!(provider instanceof OpenShiftOAuthAuthenticator)) {
+            throw new ServerException("'setToken' API is not supported by " + "\"" + oauthProvider + "\"");
+        }
+
+        String userId = EnvironmentContext.getCurrent().getSubject().getUserId();
+
+        try {
+            ((OpenShiftOAuthAuthenticator) provider).setToken(userId, token);
+        } catch (IOException e) {
+            throw new ServerException(e.getMessage());
+        }
+    }
 
     @GET
     @Path("/github")
