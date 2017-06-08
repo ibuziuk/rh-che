@@ -136,10 +136,10 @@ Howvever it can removed by adding the following option to the maven command:
 
 ##### Enabling / Disabling the Keycloak integration
 
-By default the Keycloak integration is part of the RedHat Che distribution.
-Howvever it can removed by adding the following option to the maven command:
+By default the Keycloak integration is disabled in the Red Hat Che distribution.
+However, it can be enabled by adding the following option to the maven command:
 
-    -DwithoutKeycloak
+    -DwithoutKeycloak=false
 
 ##### Enabling / Disabling the checks and tests
 
