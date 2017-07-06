@@ -19,23 +19,28 @@ import org.eclipse.che.api.core.rest.DefaultHttpJsonRequestFactory;
 import org.eclipse.che.api.core.rest.HttpJsonRequest;
 import org.eclipse.che.api.core.rest.shared.dto.Link;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @Singleton
 public class KeycloakHttpJsonRequestFactory extends DefaultHttpJsonRequestFactory {
+    private static final Logger LOG = LoggerFactory.getLogger(KeycloakHttpJsonRequestFactory.class);
 
     @Inject
-    public KeycloakHttpJsonRequestFactory() {
-    }
+    ServiceAccountTokenProvider serviceAccountTokenProvider;
 
     @Override
     public HttpJsonRequest fromUrl(@NotNull String url) {
-        System.out.println(" setAuthorizationHeader for " + url);
-        return super.fromUrl(url).setAuthorizationHeader("Internal");
+        LOG.debug("setAuthorizationHeader for {}", url);
+        String token = serviceAccountTokenProvider.getToken();
+        return super.fromUrl(url).setAuthorizationHeader(token); 
     }
 
     @Override
     public HttpJsonRequest fromLink(@NotNull Link link) {
-        System.out.println(" setAuthorizationHeader for " + link);       
-        return super.fromLink(link).setAuthorizationHeader("Internal");
+        LOG.debug("setAuthorizationHeader for {}", link);
+        String token = serviceAccountTokenProvider.getToken();
+        return super.fromLink(link).setAuthorizationHeader(token);
     }
 
 }

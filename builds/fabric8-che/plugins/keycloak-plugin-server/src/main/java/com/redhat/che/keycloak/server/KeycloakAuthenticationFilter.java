@@ -13,6 +13,7 @@ package com.redhat.che.keycloak.server;
 
 import java.io.IOException;
 
+import javax.inject.Inject;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
@@ -26,6 +27,9 @@ import org.slf4j.LoggerFactory;
 public class KeycloakAuthenticationFilter extends org.keycloak.adapters.servlet.KeycloakOIDCFilter {
     
     private static final Logger LOG = LoggerFactory.getLogger(KeycloakAuthenticationFilter.class);
+
+    @Inject
+    ServiceAccountTokenProvider serviceAccountTokenProvider;
 
     public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)
             throws IOException, ServletException {
@@ -57,8 +61,12 @@ public class KeycloakAuthenticationFilter extends org.keycloak.adapters.servlet.
         return requestURI.endsWith("/api/system/state");
     }
 
+    /**
+     * @param authHeader
+     * @return true if 'Authorization' header contains valid service account token, false otherwise
+     */
     private boolean isInternalRequest(String authHeader) {
-        return "Internal".equals(authHeader);
+        return serviceAccountTokenProvider.getToken().equals(authHeader);
     }
 
     private boolean isWebsocketRequest(String requestURI, String requestScheme) {
