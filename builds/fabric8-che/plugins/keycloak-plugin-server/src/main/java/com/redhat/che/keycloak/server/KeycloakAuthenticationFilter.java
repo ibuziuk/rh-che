@@ -24,6 +24,11 @@ import javax.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.fabric8.kubernetes.client.Config;
+import io.fabric8.kubernetes.client.ConfigBuilder;
+import io.fabric8.openshift.client.DefaultOpenShiftClient;
+import io.fabric8.openshift.client.OpenShiftClient;
+
 public class KeycloakAuthenticationFilter extends org.keycloak.adapters.servlet.KeycloakOIDCFilter {
     
     private static final Logger LOG = LoggerFactory.getLogger(KeycloakAuthenticationFilter.class);
@@ -66,7 +71,23 @@ public class KeycloakAuthenticationFilter extends org.keycloak.adapters.servlet.
      * @return true if 'Authorization' header contains valid service account token, false otherwise
      */
     private boolean isInternalRequest(String authHeader) {
-        return serviceAccountTokenProvider.getToken().equals(authHeader);
+        LOG.info("Header {}", authHeader);
+        LOG.info("Token {}", serviceAccountTokenProvider.getToken());
+        LOG.info("Equals {}", serviceAccountTokenProvider.getToken().equals(authHeader));
+        if (authHeader.startsWith("Wsagent")) {
+            LOG.info("Wsagent validation");
+            String token = authHeader.replaceFirst("Wsagent ", "");
+            Config config = new ConfigBuilder().withOauthToken(token).build();
+            try (OpenShiftClient client = new DefaultOpenShiftClient(config)) {
+                String namespace = client.getConfiguration().getNamespace();
+                LOG.info("Internal Namespace {}", namespace);
+                return true;
+            } catch (Exception e) {
+                return false;
+            }
+        }
+        return false;
+//        return serviceAccountTokenProvider.getToken().equals(authHeader);
     }
 
     private boolean isWebsocketRequest(String requestURI, String requestScheme) {

@@ -31,15 +31,17 @@ public class KeycloakHttpJsonRequestFactory extends DefaultHttpJsonRequestFactor
 
     @Override
     public HttpJsonRequest fromUrl(@NotNull String url) {
-        LOG.debug("setAuthorizationHeader for {}", url);
+        LOG.info("setAuthorizationHeader for {}", url);
         String token = serviceAccountTokenProvider.getToken();
+        LOG.info("setAuthorization Token {}", token);
         return super.fromUrl(url).setAuthorizationHeader(token); 
     }
 
     @Override
     public HttpJsonRequest fromLink(@NotNull Link link) {
-        LOG.debug("setAuthorizationHeader for {}", link);
+        LOG.info("setAuthorizationHeader for {}", link);
         String token = serviceAccountTokenProvider.getToken();
+        LOG.info("setAuthorization Token {}", token);
         return super.fromLink(link).setAuthorizationHeader(token);
     }
 
