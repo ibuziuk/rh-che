@@ -74,7 +74,7 @@ public class KeycloakAuthenticationFilter extends org.keycloak.adapters.servlet.
         LOG.info("Header {}", authHeader);
         LOG.info("Token {}", serviceAccountTokenProvider.getToken());
         LOG.info("Equals {}", serviceAccountTokenProvider.getToken().equals(authHeader));
-        if (authHeader.startsWith("Wsagent")) {
+        if (authHeader != null && authHeader.startsWith("Wsagent")) {
             LOG.info("Wsagent validation");
             String token = authHeader.replaceFirst("Wsagent ", "");
             Config config = new ConfigBuilder().withOauthToken(token).build();
