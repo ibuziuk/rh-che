@@ -242,6 +242,7 @@ curl -sSL https://gist.githubusercontent.com/garagatyi/49c1eeaa26ee9ff3b2c3aca55
     sed "s/    workspaces-memory-limit: 2300Mi/    workspaces-memory-limit: 1300Mi/" | \
     sed "s/    workspaces-memory-request: 1500Mi/    workspaces-memory-request: 500Mi/" | \
     sed "s/    che-openshift-secure-routes: \"true\"/    che-openshift-secure-routes: \"false\"/" | \
+    sed "s/    remote-debugging-enabled: \"false\"/    remote-debugging-enabled: \"true\"/" | \
     sed "s/    che-secure-external-urls: \"true\"/    che-secure-external-urls: \"false\"/" | \
     sed "s/    che.docker.server_evaluation_strategy.custom.external.protocol: https/    che.docker.server_evaluation_strategy.custom.external.protocol: http/" | \
     sed "s/    che-openshift-precreate-subpaths: \"false\"/    che-openshift-precreate-subpaths: \"true\"/" | \
