@@ -71,9 +71,9 @@ done
 
 DEFAULT_COMMAND="deploy"
 COMMAND=${COMMAND:-${DEFAULT_COMMAND}}
-DEFAULT_CHE_IMAGE_REPO="eclipse/che-server"
+DEFAULT_CHE_IMAGE_REPO="ibuziuk/che-server"
 CHE_IMAGE_REPO=${CHE_IMAGE_REPO:-${DEFAULT_CHE_IMAGE_REPO}}
-DEFAULT_CHE_IMAGE_TAG="spi"
+DEFAULT_CHE_IMAGE_TAG="spi-new"
 CHE_IMAGE_TAG=${CHE_IMAGE_TAG:-${DEFAULT_CHE_IMAGE_TAG}}
 DEFAULT_CHE_LOG_LEVEL="INFO"
 CHE_LOG_LEVEL=${CHE_LOG_LEVEL:-${DEFAULT_CHE_LOG_LEVEL}}
@@ -88,8 +88,9 @@ KEYCLOAK_GITHUB_ENDPOINT=${KEYCLOAK_GITHUB_ENDPOINT:-${DEFAULT_KEYCLOAK_GITHUB_E
 
 # OPENSHIFT_FLAVOR can be minishift or openshift
 # TODO Set flavour via a parameter
-DEFAULT_OPENSHIFT_FLAVOR=minishift
+DEFAULT_OPENSHIFT_FLAVOR=osio
 OPENSHIFT_FLAVOR=${OPENSHIFT_FLAVOR:-${DEFAULT_OPENSHIFT_FLAVOR}}
+OPENSHIFT_TOKEN=zlWolimYThO6UkxK3LVa1FPOQrZNHXQ8V76pIU5zQ2g
 
 
 if [ "${OPENSHIFT_FLAVOR}" == "minishift" ]; then
@@ -106,7 +107,7 @@ if [ "${OPENSHIFT_FLAVOR}" == "minishift" ]; then
   OPENSHIFT_USERNAME=${OPENSHIFT_USERNAME:-${DEFAULT_OPENSHIFT_USERNAME}}
   DEFAULT_OPENSHIFT_PASSWORD="developer"
   OPENSHIFT_PASSWORD=${OPENSHIFT_PASSWORD:-${DEFAULT_OPENSHIFT_PASSWORD}}
-  DEFAULT_CHE_OPENSHIFT_PROJECT="spi"
+  DEFAULT_CHE_OPENSHIFT_PROJECT="ibuziuk-che"
   CHE_OPENSHIFT_PROJECT=${CHE_OPENSHIFT_PROJECT:-${DEFAULT_CHE_OPENSHIFT_PROJECT}}
   DEFAULT_OPENSHIFT_NAMESPACE_URL="${CHE_OPENSHIFT_PROJECT}.$(minishift ip).nip.io"
   OPENSHIFT_NAMESPACE_URL=${OPENSHIFT_NAMESPACE_URL:-${DEFAULT_OPENSHIFT_NAMESPACE_URL}}
@@ -260,10 +261,16 @@ curl -sSL https://gist.githubusercontent.com/garagatyi/49c1eeaa26ee9ff3b2c3aca55
     oc apply --force=true -f -
 else
   echo "[CHE] Deploying Che on OSIO (image ${CHE_IMAGE})"
-  curl -sSL http://central.maven.org/maven2/io/fabric8/online/apps/che/"${OSIO_VERSION}"/che-"${OSIO_VERSION}"-openshift.yml | \
+curl -sSL https://gist.githubusercontent.com/garagatyi/49c1eeaa26ee9ff3b2c3aca55243556f/raw/ba93b117199212fd8be195764136aa23c361afe6/che-spi-openshift.yml | \
     if [ ! -z "${OPENSHIFT_NAMESPACE_URL+x}" ]; then sed "s/    hostname-http:.*/    hostname-http: ${OPENSHIFT_NAMESPACE_URL}/" ; else cat -; fi | \
     sed "s|    keycloak-oso-endpoint:.*|    keycloak-oso-endpoint: ${KEYCLOAK_OSO_ENDPOINT}|" | \
     sed "s|    keycloak-github-endpoint:.*|    keycloak-github-endpoint: ${KEYCLOAK_GITHUB_ENDPOINT}|" | \
+    sed "s|    CHE_INFRA_OPENSHIFT_MASTER__URL:.*|    CHE_INFRA_OPENSHIFT_MASTER__URL: ${DEFAULT_OPENSHIFT_ENDPOINT}|" | \
+    sed "s|    CHE_INFRA_OPENSHIFT_CHE__SERVER__ENDPOINT:.*|    CHE_INFRA_OPENSHIFT_CHE__SERVER__ENDPOINT: https://che-${DEFAULT_OPENSHIFT_NAMESPACE_URL}/wsmaster/api|" | \
+    sed "s|    CHE_INFRA_OPENSHIFT_BOOTSTRAPPER_BINARY__URL:.*|    CHE_INFRA_OPENSHIFT_BOOTSTRAPPER_BINARY__URL: https://che-${DEFAULT_OPENSHIFT_NAMESPACE_URL}/agent-binaries/linux_amd64/bootstrapper/bootstrapper|" | \
+    sed "s|    CHE_WEBSOCKET_ENDPOINT_BASE:.*|    CHE_WEBSOCKET_ENDPOINT_BASE: wss://che-${DEFAULT_OPENSHIFT_NAMESPACE_URL}|" | \
+    sed "s|    CHE_INFRA_OPENSHIFT_CHE__SERVER__WEBSOCKET__ENDPOINT__BASE:.*|    CHE_INFRA_OPENSHIFT_CHE__SERVER__WEBSOCKET__ENDPOINT__BASE: wss://che-${DEFAULT_OPENSHIFT_NAMESPACE_URL}/wsmaster|" | \
+    sed "s|    CHE_HOST: "'${DEFAULT_OPENSHIFT_NAMESPACE_URL}'"|    CHE_HOST: che-${DEFAULT_OPENSHIFT_NAMESPACE_URL}|" | \
     sed "s/          image:.*/          image: \"${CHE_IMAGE_SANITIZED}\"/" | \
     if [ "${CHE_KEYCLOAK_DISABLED}" == "true" ]; then sed "s/    keycloak-disabled: \"false\"/    keycloak-disabled: \"true\"/" ; else cat -; fi | \
     oc apply --force=true -f -
