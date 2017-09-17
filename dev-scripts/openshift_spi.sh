@@ -73,7 +73,7 @@ DEFAULT_COMMAND="deploy"
 COMMAND=${COMMAND:-${DEFAULT_COMMAND}}
 DEFAULT_CHE_IMAGE_REPO="ibuziuk/che-server"
 CHE_IMAGE_REPO=${CHE_IMAGE_REPO:-${DEFAULT_CHE_IMAGE_REPO}}
-DEFAULT_CHE_IMAGE_TAG="spi-new"
+DEFAULT_CHE_IMAGE_TAG="rebased-tls-checker"
 CHE_IMAGE_TAG=${CHE_IMAGE_TAG:-${DEFAULT_CHE_IMAGE_TAG}}
 DEFAULT_CHE_LOG_LEVEL="INFO"
 CHE_LOG_LEVEL=${CHE_LOG_LEVEL:-${DEFAULT_CHE_LOG_LEVEL}}
@@ -120,6 +120,7 @@ elif [ "${OPENSHIFT_FLAVOR}" == "osio" ]; then
   # ----------------------
   if [ -z "${OPENSHIFT_TOKEN+x}" ]; then echo "[CHE] **ERROR** Env var OPENSHIFT_TOKEN is unset. You need to set it with you OSO token to continue. To retrieve your token: https://console.starter-us-east-2.openshift.com/console/command-line. Aborting"; exit 1; fi
 
+  # DEFAULT_OPENSHIFT_ENDPOINT="https://api.starter-us-east-2.openshift.com"
   DEFAULT_OPENSHIFT_ENDPOINT="https://api.starter-us-east-2.openshift.com"
   OPENSHIFT_ENDPOINT=${OPENSHIFT_ENDPOINT:-${DEFAULT_OPENSHIFT_ENDPOINT}}
   DEFAULT_CHE_OPENSHIFT_PROJECT="$(oc get projects -o=custom-columns=NAME:.metadata.name --no-headers | grep "\-che$")"
@@ -243,11 +244,11 @@ curl -sSL https://gist.githubusercontent.com/garagatyi/49c1eeaa26ee9ff3b2c3aca55
     sed "s/    workspaces-memory-limit: 2300Mi/    workspaces-memory-limit: 1300Mi/" | \
     sed "s/    workspaces-memory-request: 1500Mi/    workspaces-memory-request: 500Mi/" | \
     sed "s/    che-openshift-secure-routes: \"true\"/    che-openshift-secure-routes: \"false\"/" | \
-    sed "s/    remote-debugging-enabled: \"false\"/    remote-debugging-enabled: \"true\"/" | \
+    sed "s/    remote-debugging-enabled: \"false\"/    remote-debugging-enabled: \"false\"/" | \
     sed "s/    che-secure-external-urls: \"true\"/    che-secure-external-urls: \"false\"/" | \
     sed "s/    che.docker.server_evaluation_strategy.custom.external.protocol: https/    che.docker.server_evaluation_strategy.custom.external.protocol: http/" | \
-    sed "s/    che-openshift-precreate-subpaths: \"false\"/    che-openshift-precreate-subpaths: \"true\"/" | \
-    sed "s/    che.predefined.stacks.reload_on_start: \"true\"/    che.predefined.stacks.reload_on_start: \"false\"/" | \
+    sed "s/    che-openshift-precreate-subpaths: \"false\"/    che-openshift-precreate-subpaths: \"false\"/" | \
+    sed "s/    che.predefined.stacks.reload_on_start: \"true\"/    che.predefined.stacks.reload_on_start: \"true\"/" | \
     sed "s|    keycloak-oso-endpoint:.*|    keycloak-oso-endpoint: ${KEYCLOAK_OSO_ENDPOINT}|" | \
     sed "s|    keycloak-github-endpoint:.*|    keycloak-github-endpoint: ${KEYCLOAK_GITHUB_ENDPOINT}|" | \
     sed "s|    CHE_INFRA_OPENSHIFT_MASTER__URL:.*|    CHE_INFRA_OPENSHIFT_MASTER__URL: ${DEFAULT_OPENSHIFT_ENDPOINT}|" | \
