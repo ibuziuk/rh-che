@@ -248,21 +248,6 @@ objects:
               configMapKeyRef:
                 key: che-host
                 name: che
-          - name: CHE_JDBC_PASSWORD
-            valueFrom:
-              secretKeyRef:
-                  key: che.jdbc.password
-                  name: che
-          - name: CHE_JDBC_URL
-            valueFrom:
-              secretKeyRef:
-                  key: che.jdbc.url
-                  name: che
-          - name: CHE_JDBC_USERNAME
-            valueFrom:
-              secretKeyRef:
-                  key: che.jdbc.username
-                  name: che
           - name: CHE_WORKSPACE_AGENT_DEV_PING__SUCCESS__THRESHOLD
             valueFrom:
               configMapKeyRef:
@@ -273,7 +258,7 @@ objects:
               configMapKeyRef:
                 key: che-limits-user-workspaces-run-count
                 name: che
-          image: ${IMAGE}:${IMAGE_TAG}
+          image: ibuziuk/che-server-multiuser:c82f44b-fabric8-4d75775
           imagePullPolicy: IfNotPresent
           livenessProbe:
             httpGet:
