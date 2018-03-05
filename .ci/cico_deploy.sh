@@ -48,8 +48,8 @@ else
   exit 1
 fi
 
-PROD_IMAGE_DEVSHIFT="push.registry.devshift.net/che/che-multiuser:${TAG_SHORT_COMMIT_HASH}"
-PROD_IMAGE_DEVSHIFT_LATEST="push.registry.devshift.net/che/che-multiuser:latest"
+PROD_IMAGE_DEVSHIFT="push.registry.devshift.net/che/rh-che-server:${TAG_SHORT_COMMIT_HASH}"
+PROD_IMAGE_DEVSHIFT_LATEST="push.registry.devshift.net/che/rh-che-server:latest"
 
 if [ -n "${DEVSHIFT_USERNAME}" -a -n "${DEVSHIFT_PASSWORD}" ]; then
   docker login -u "${DEVSHIFT_USERNAME}" -p "${DEVSHIFT_PASSWORD}" push.registry.devshift.net
