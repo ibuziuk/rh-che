@@ -12,7 +12,7 @@ ABSOLUTE_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 RH_CHE_TAG=$(git rev-parse --short HEAD)
 
-UPSTREAM_TAG=$(sed -n 's/^SCM-Revision: \(.\{7\}\).*/\1/p' ${ABSOLUTE_PATH}/../assembly/assembly-wsmaster-war/target/war/work/org.eclipse.che/assembly-wsmaster-war/META-INF/MANIFEST.MF)
+UPSTREAM_TAG=$(sed -n 's/^revision = \(.\{7\}\).*/\1/p' ${ABSOLUTE_PATH}/../assembly/assembly-build-info/target/dependency/WEB-INF/classes/org/eclipse/che/ide/ext/help/client/BuildInfo.properties)
 
 # Now lets build the local docker images
 DIR=${ABSOLUTE_PATH}/../dockerfiles/che-fabric8
@@ -60,16 +60,16 @@ do
   docker rmi eclipse/che-server:local
 
   # lets change the tag and push it to the registry
-  docker tag ${DOCKER_HUB_NAMESPACE}/che-server:${NIGHTLY} ${DOCKER_HUB_NAMESPACE}/che-server:${TAG}
-  docker tag ${DOCKER_HUB_NAMESPACE}/che-server:${NIGHTLY} ${DOCKER_HUB_NAMESPACE}/che-server:${NIGHTLY}
+  docker tag ${DOCKER_HUB_NAMESPACE}/che-server:${NIGHTLY} ${DOCKER_HUB_NAMESPACE}/che-server-multiuser:${TAG}
+  docker tag ${DOCKER_HUB_NAMESPACE}/che-server:${NIGHTLY} ${DOCKER_HUB_NAMESPACE}/che-server-multiuser:${NIGHTLY}
     
-  dockerTags="${dockerTags} ${DOCKER_HUB_NAMESPACE}/che-server:${NIGHTLY} ${DOCKER_HUB_NAMESPACE}/che-server:${TAG}"
+  dockerTags="${dockerTags} ${DOCKER_HUB_NAMESPACE}/che-server-multiuser:${NIGHTLY} ${DOCKER_HUB_NAMESPACE}/che-server-multiuser:${TAG}"
     
   if [ "$DeveloperBuild" != "true" ]
   then
     docker login -u ${DOCKER_HUB_USER} -p $DOCKER_HUB_PASSWORD -e noreply@redhat.com 
-    docker push ${DOCKER_HUB_NAMESPACE}/che-server:${NIGHTLY}
-    docker push ${DOCKER_HUB_NAMESPACE}/che-server:${TAG}
+    docker push ${DOCKER_HUB_NAMESPACE}/che-server-multiuser:${NIGHTLY}
+    docker push ${DOCKER_HUB_NAMESPACE}/che-server-multiuser:${TAG}
   fi
 done
 
@@ -88,4 +88,3 @@ echo "! in the ${dockerEnv}"
 echo "!"
 echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 echo "!"
-
