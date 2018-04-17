@@ -11,6 +11,7 @@ set +o nounset
 
 /usr/sbin/setenforce 0
 
+export RH_CHE_AUTOMATION_SERVER_DEPLOYMENT_URL=https://rhche-che6-automated.dev.rdu2c.fabric8.io/
 export CHE_DOCKER_BASE_IMAGE=eclipse/che-server:nightly-centos
 export ORIGIN_CLIENTS_URL=http://mirror.centos.org/centos/7/paas/x86_64/openshift-origin/origin-clients-3.7.1-2.el7.x86_64.rpm
 export OPENSHIFT_RDU2C_URL=https://dev.rdu2c.fabric8.io:8443/
@@ -134,9 +135,20 @@ set +x
                                       -p ${RH_CHE_AUTOMATION_RDU2C_PASSWORD} \
                                       -r rhcheautomation/che-server \
                                       -t ${RH_CHE_AUTOMATION_BUILD_TAG} \
-                                      -s
+                                      -s || {
+  echo "Custom che deployment failed."
+  exit 1
+}
 set -x
+
+echo "Custom che deployment successful, running che-functional tests against ${RH_CHE_AUTOMATION_SERVER_DEPLOYMENT_URL}"
+./.ci/cico_run_che-functional-tests.sh || {
+  echo "Che functional tests failed."
+  exit 1
+}
+echo "Che functional tests finished successfully."
 
 unset RH_CHE_AUTOMATION_BUILD_TAG;
 unset CHE_DOCKER_BASE_IMAGE;
+unset RH_CHE_AUTOMATION_SERVER_DEPLOYMENT_URL;
 /usr/sbin/setenforce 1

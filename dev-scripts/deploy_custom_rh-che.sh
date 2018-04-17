@@ -320,7 +320,7 @@ if ! (echo "$CHE_APP_CONFIG_YAML" | oc process -f - | oc apply -f - > /dev/null 
   exit 1
 fi
 
-CHE_STARTUP_TIMEOUT=120
+CHE_STARTUP_TIMEOUT=256
 while [[ "${RH_CHE_STATUS_PROGRESS}" != "\"True\"" || "${RH_CHE_STATUS_AVAILABLE}" != "\"True\"" ]] && [ ${CHE_STARTUP_TIMEOUT} -gt 0 ]; do
   sleep 1
   checkCheStatus
