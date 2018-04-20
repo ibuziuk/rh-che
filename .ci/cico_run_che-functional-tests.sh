@@ -13,14 +13,27 @@ set +o nounset
 
 yum install --assumeyes git
 
+set +x
+export CUSTOM_CHE_SERVER_FULL_URL=${RH_CHE_AUTOMATION_SERVER_DEPLOYMENT_URL}
+export OSIO_USERNAME=${RH_CHE_AUTOMATION_CHE_PREVIEW_USERNAME}
+export OSIO_PASSWORD=${RH_CHE_AUTOMATION_CHE_PREVIEW_PASSWORD}
+echo "OSIO_USERNAME=${OSIO_USERNAME}" >> ./jenkins-env
+echo "OSIO_PASSWORD=${OSIO_PASSWORD}" >> ./jenkins-env
+echo "CUSTOM_CHE_SERVER_FULL_URL=${CUSTOM_CHE_SERVER_FULL_URL}" >> ./jenkins-env
+
 echo "Downloading che-functional-tests repo"
 
-#git clone git@github.com:redhat-developer/che-functional-tests.git
+#git -c http.sslVerify=false clone https://github.com/redhat-developer/che-functional-tests.git
 git -c http.sslVerify=false clone https://github.com/ScrewTSW/che-functional-tests.git
+cp ./jenkins-env ./che-functional-tests/jenkins-env
+mv ./artifacts.key ./che-functional-tests/artifacts.key
 cd ./che-functional-tests
-git checkout 193-add-custom-che-server-url
+git fetch --all
+git checkout 213-feature-run-EE-tests-PR-check-custom-server
 
 echo "Downloading done."
-echo "Running functional tests against ${RH_CHE_AUTOMATION_SERVER_DEPLOYMENT_URL}"
+echo "Running functional tests against ${CUSTOM_CHE_SERVER_FULL_URL}"
 
-./cico/cico_run_EE_tests.sh ./cico/config_rh_che_automated
+set -x
+
+DO_NOT_REBASE=true ./cico/cico_run_EE_tests.sh ./cico/config_rh_che_automated

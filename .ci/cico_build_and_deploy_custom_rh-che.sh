@@ -63,9 +63,7 @@ echo "***======================================***"
 echo "Running ${JOB_NAME} build number #${BUILD_NUMBER}, testing creds:"
 
 CREDS_NOT_SET="false"
-#curl ${ORIGIN_CLIENTS_URL} > origin-clients.rpm
-#yum install --assumeyes ./origin-clients.rpm
-curl "https://mirror.openshift.com/pub/openshift-v3/clients/${OC_VERSION}/linux/oc.tar.gz" | tar xvz -C /usr/local/bin
+curl -s "https://mirror.openshift.com/pub/openshift-v3/clients/${OC_VERSION}/linux/oc.tar.gz" | tar xvz -C /usr/local/bin
 if [ -z ${RH_CHE_AUTOMATION_DOCKERHUB_USERNAME} ] || [ -z ${RH_CHE_AUTOMATION_DOCKERHUB_PASSWORD} ]; then
   echo "Dockerhub credentials not set"
   CREDS_NOT_SET="true"
@@ -108,6 +106,7 @@ yum install --assumeyes \
             docker \
             git \
             patch \
+            pcp \
             bzip2 \
             golang \
             make \
@@ -134,8 +133,10 @@ set +x
 ./dev-scripts/deploy_custom_rh-che.sh -u ${RH_CHE_AUTOMATION_RDU2C_USERNAME} \
                                       -p ${RH_CHE_AUTOMATION_RDU2C_PASSWORD} \
                                       -r rhcheautomation/che-server \
+                                      -e che6-automated \
                                       -t ${RH_CHE_AUTOMATION_BUILD_TAG} \
-                                      -s || {
+                                      -s \
+                                      -z || {
   echo "Custom che deployment failed."
   exit 1
 }
