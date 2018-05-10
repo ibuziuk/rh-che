@@ -18,20 +18,31 @@ export OPENSHIFT_RDU2C_URL=https://dev.rdu2c.fabric8.io:8443/
 export OC_VERSION=3.9.19
 export TARGET="rhel"
 export RH_CHE_DOCKER_IMAGE_VERSION=nightly-rhcheautomation
-export DOCKER_REGISTRY="push.registry.devshift.net/rh-che-automation"
 
 function tagAndPushDocker() {
   export RH_CHE_AUTOMATION_BUILD_TAG=rh-che-automated-build-$(git rev-parse --short HEAD)
   source ${BASEDIR}/config
-  echo "Building for:${DOCKERFILE}"
+  echo "Building for:${BASEDIR}/dockerfiles/che-fabric8/${DOCKERFILE}"
+  echo "Docker status:"
+  docker images
+  echo "Copy built che."
   rm -rf ./dockerfiles/che-fabric8/eclipse-che
   mkdir ./dockerfiles/che-fabric8/eclipse-che
   cp -r ./assembly/assembly-main/target/eclipse-che-fabric8-1.0.0-SNAPSHOT/eclipse-che-fabric8-1.0.0-SNAPSHOT/* ./dockerfiles/che-fabric8/eclipse-che/
-  docker login -u "${DEFSHIFT_USERNAME}" -p "${DEVSHIFT_PASSWORD}" ${REGISTRY}
-  docker build -t ${REGISTRY}/rh-che-automation/$RH_CHE_DOCKER_IMAGE_VERSION:${RH_CHE_AUTOMATION_BUILD_TAG} || exit 1
-  docker tag ${REGISTRY}/rh-che-automation/$RH_CHE_DOCKER_IMAGE_VERSION:${RH_CHE_AUTOMATION_BUILD_TAG} ${REGISTRY}/rh-che-automation/$RH_CHE_DOCKER_IMAGE_VERSION:latest
-  docker push ${REGISTRY}/rh-che-automation/$RH_CHE_DOCKER_IMAGE_VERSION:${RH_CHE_AUTOMATION_BUILD_TAG}
-  docker push ${REGISTRY}/rh-che-automation/$RH_CHE_DOCKER_IMAGE_VERSION:latest
+  echo "Docker login."
+  docker login -u "${DEVSHIFT_USERNAME}" -p "${DEVSHIFT_PASSWORD}" ${REGISTRY}
+  echo "Docker build."
+  docker build -t ${REGISTRY}/${NAMESPACE}/${RH_CHE_DOCKER_IMAGE_VERSION}:${RH_CHE_AUTOMATION_BUILD_TAG} -f ${BASEDIR}/dockerfiles/che-fabric8/${DOCKERFILE} ${BASEDIR}/dockerfiles/che-fabric8/ || exit 1;
+  echo "Docker tag."
+  docker tag ${REGISTRY}/${NAMESPACE}/${RH_CHE_DOCKER_IMAGE_VERSION}:${RH_CHE_AUTOMATION_BUILD_TAG} ${REGISTRY}/${NAMESPACE}/${RH_CHE_DOCKER_IMAGE_VERSION}:latest
+  echo "After build:"
+  docker images
+  echo "Docker push."
+  # Push disabled for now
+  #docker push ${REGISTRY}/$RH_CHE_DOCKER_IMAGE_VERSION:${RH_CHE_AUTOMATION_BUILD_TAG}
+  #docker push ${REGISTRY}/$RH_CHE_DOCKER_IMAGE_VERSION:latest
+
+  # Out of date
   #docker tag eclipse/che-server:nightly rhcheautomation/che-server:${RH_CHE_AUTOMATION_BUILD_TAG}
   #set +x
   #docker login -u ${RH_CHE_AUTOMATION_DOCKERHUB_USERNAME} -p ${RH_CHE_AUTOMATION_DOCKERHUB_PASSWORD}
