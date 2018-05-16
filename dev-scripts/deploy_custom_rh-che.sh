@@ -39,14 +39,12 @@ export RH_CHE_RUNNING_STANDALONE_SCRIPT="false";
 function setVars() {
   if [ "$RH_CHE_IS_V_FIVE" == "true" ]; then
     export RH_CHE_DOCKER_IMAGE_TAG="c82f44b-fabric8-9cc154c";
-    export RH_CHE_DOCKER_IMAGE_NAME="rhche/che-server-multiuser";
+    export RH_CHE_DOCKER_REPOSITORY="rhche/che-server-multiuser";
     export RH_CHE_PROJECT_NAMESPACE=$(oc whoami)-che5-automated;
     export RH_CHE_GITHUB_BRANCH=master;
   else
-#    export RH_CHE_DOCKER_IMAGE_TAG="nightly-fabric8";
-#    export RH_CHE_DOCKER_IMAGE_NAME="dfestal/che-server";
     export RH_CHE_DOCKER_IMAGE_TAG="latest";
-    export RH_CHE_DOCKER_IMAGE_NAME="registry.devshift.net/che/rh-che-server";
+    export RH_CHE_DOCKER_REPOSITORY="registry.devshift.net/che/rh-che-server";
     export RH_CHE_PROJECT_NAMESPACE=$(oc whoami)-che6-automated;
     export RH_CHE_GITHUB_BRANCH=master;
   fi
@@ -123,7 +121,7 @@ while getopts ':5hnsu:p:r:t:o:e:b:z' option; do
     o) export RH_CHE_OPENSHIFT_TOKEN=$OPTARG
        export RH_CHE_OPENSHIFT_USE_TOKEN="true"
        ;;
-    r) export RH_CHE_DOCKER_IMAGE_NAME=$OPTARG
+    r) export RH_CHE_DOCKER_REPOSITORY=$OPTARG
        ;;
     e) export RH_CHE_PROJECT_NAMESPACE=$OPTARG
        ;;
@@ -285,7 +283,7 @@ echo -e "\033[92;1mChe config deployed on \033[34m${RH_CHE_PROJECT_NAMESPACE}\03
 # PROCESS CHE APP CONFIG
 CHE_APP_CONFIG_YAML=$(yq "" ${RH_CHE_APP})
 CHE_APP_CONFIG_YAML=$(echo "$CHE_APP_CONFIG_YAML" | \
-                      yq "(.parameters[] | select(.name == \"IMAGE\").value) |= \"$RH_CHE_DOCKER_IMAGE_NAME\" | 
+                      yq "(.parameters[] | select(.name == \"IMAGE\").value) |= \"$RH_CHE_DOCKER_REPOSITORY\" |
                           (.parameters[] | select(.name == \"IMAGE_TAG\").value) |= \"$RH_CHE_DOCKER_IMAGE_TAG\" | 
                           (.objects[] | select(.kind == \"DeploymentConfig\").spec.template.spec.containers[0].imagePullPolicy) |= \"Always\"")
 if [ "$RH_CHE_IS_V_FIVE" == "true" ]; then
@@ -314,7 +312,6 @@ else
                              select(.name == \"CHE_JDBC_USERNAME\").valueFrom) |= {\"configMapKeyRef\":{\"key\":\"che.jdbc.username\",\"name\":\"rhche\"}}")
 fi
 
-#echo "$CHE_APP_CONFIG_YAML" | oc process -f - | cat
 if ! (echo "$CHE_APP_CONFIG_YAML" | oc process -f - | oc apply -f - > /dev/null 2>&1); then
   echo -e "\033[91;1mFailed to process che config\033[0m"
   exit 1
