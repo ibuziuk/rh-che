@@ -14,10 +14,9 @@ set +o nounset
 export RH_CHE_AUTOMATION_SERVER_DEPLOYMENT_URL=https://rhche-che6-automated.dev.rdu2c.fabric8.io/
 export BASEDIR=$(pwd)
 export ORIGIN_CLIENTS_URL=http://mirror.centos.org/centos/7/paas/x86_64/openshift-origin/origin-clients-3.7.1-2.el7.x86_64.rpm
-export OSD_RDU2C_URL=https://dev.rdu2c.fabric8.io:8443/
+export DEV_CLUSTER_URL=https://dev.rdu2c.fabric8.io:8443/
 export OC_VERSION=3.9.19
 export TARGET="rh-aut"
-export RH_CHE_DOCKER_IMAGE_VERSION=nightly-rhcheautomation
 
 function BuildTagAndPushDocker() {
   echo "Building for:dockerfiles/che-fabric8/${DOCKERFILE}"
@@ -64,9 +63,9 @@ if [ -z ${RH_CHE_AUTOMATION_RDU2C_USERNAME} ] || [ -z ${RH_CHE_AUTOMATION_RDU2C_
   echo "RDU2C credentials not set"
   CREDS_NOT_SET="true"
 else
-  oc login ${OSD_RDU2C_URL} --insecure-skip-tls-verify \
-                                  -u ${RH_CHE_AUTOMATION_RDU2C_USERNAME} \
-                                  -p ${RH_CHE_AUTOMATION_RDU2C_PASSWORD} && echo "Credentials test OK" || {
+  oc login ${DEV_CLUSTER_URL} --insecure-skip-tls-verify \
+                              -u ${RH_CHE_AUTOMATION_RDU2C_USERNAME} \
+                              -p ${RH_CHE_AUTOMATION_RDU2C_PASSWORD} && echo "Credentials test OK" || {
     echo "Openshift login failed"
     echo "login: |${RH_CHE_AUTOMATION_RDU2C_USERNAME:0:1}*${RH_CHE_AUTOMATION_RDU2C_USERNAME:7:2}*${RH_CHE_AUTOMATION_RDU2C_USERNAME: -1}|" 
     echo "passwd: |${RH_CHE_AUTOMATION_RDU2C_PASSWORD:0:1}***${RH_CHE_AUTOMATION_RDU2C_PASSWORD: -1}|" 
