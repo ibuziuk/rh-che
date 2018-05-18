@@ -16,7 +16,7 @@ export BASEDIR=$(pwd)
 export ORIGIN_CLIENTS_URL=http://mirror.centos.org/centos/7/paas/x86_64/openshift-origin/origin-clients-3.7.1-2.el7.x86_64.rpm
 export DEV_CLUSTER_URL=https://dev.rdu2c.fabric8.io:8443/
 export OC_VERSION=3.9.19
-export TARGET="rh-aut"
+export TARGET="rh-integration-test"
 
 function BuildTagAndPushDocker() {
   echo "Building for:dockerfiles/che-fabric8/${DOCKERFILE}"

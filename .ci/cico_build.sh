@@ -52,7 +52,7 @@ source ${ABSOLUTE_PATH}/../config
 
 runBuild "cd ${ABSOLUTE_PATH} && bash ./cico_do_build_che.sh $*"
 if [ $? -eq 0 ]; then
-  if [ "$TARGET" == "rh-aut" ]; then
+  if [ "$TARGET" == "rh-integration-test" ]; then
     DeveloperBuild="false"
   fi
   bash ${ABSOLUTE_PATH}/cico_do_docker_build_tag_push.sh

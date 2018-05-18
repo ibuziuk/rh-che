@@ -5,10 +5,9 @@
 # which accompanies this distribution, and is available at
 # http://www.eclipse.org/legal/epl-v10.html
 
-usage="\033[93;1m$(basename "$0") \033[0;1m{-5} [-u <username>] [-p <passwd>] [-o <token>] \033[90m{-t <tag>} {-r <registry>} {-e <namespace>} {-b <rh-che branch>} {-n} {-s} {-h} \033[0m-- Login to dev cluster and deploy che with specific build tag
+usage="\033[93;1m$(basename "$0") \033[0;1m[-u <username>] [-p <passwd>] [-o <token>] \033[90m{-t <tag>} {-r <registry>} {-e <namespace>} {-b <rh-che branch>} {-n} {-s} {-h} \033[0m-- Login to dev cluster and deploy che with specific build tag
 
 \033[32;1mwhere:\033[0m
-    \033[1m-5\033[0m  \033[93muse che-server V5 \033[31;1m!!MUST COME AS FIRST FLAG!!\033[0m
     \033[1m-u\033[0m  \033[93musername for openshift account\033[0m
     \033[1m-p\033[0m  \033[93mpassword for openshift account\033[0m
     \033[1m-o\033[0m  \033[93mopenshift token - \033[31;1meither token or username and password must be provided\033[0m
@@ -36,19 +35,10 @@ export RH_CHE_JDBC_PASSWORD=pgchepassword;
 export RH_CHE_JDBC_URL=jdbc:postgresql://postgres:5432/dbche;
 export RH_CHE_RUNNING_STANDALONE_SCRIPT="false";
 
-function setVars() {
-  if [ "$RH_CHE_IS_V_FIVE" == "true" ]; then
-    export RH_CHE_DOCKER_IMAGE_TAG="c82f44b-fabric8-9cc154c";
-    export RH_CHE_DOCKER_REPOSITORY="rhche/che-server-multiuser";
-    export RH_CHE_PROJECT_NAMESPACE=$(oc whoami)-che5-automated;
-    export RH_CHE_GITHUB_BRANCH=master;
-  else
-    export RH_CHE_DOCKER_IMAGE_TAG="latest";
-    export RH_CHE_DOCKER_REPOSITORY="registry.devshift.net/che/rh-che-server";
-    export RH_CHE_PROJECT_NAMESPACE=$(oc whoami)-che6-automated;
-    export RH_CHE_GITHUB_BRANCH=master;
-  fi
-}
+export RH_CHE_DOCKER_IMAGE_TAG="latest";
+export RH_CHE_DOCKER_REPOSITORY="registry.devshift.net/che/rh-che-server";
+export RH_CHE_PROJECT_NAMESPACE=$(oc whoami)-che6-automated;
+export RH_CHE_GITHUB_BRANCH=master;
 
 function unsetVars() {
   unset RH_CHE_OPENSHIFT_USERNAME;
@@ -78,11 +68,7 @@ function clearEnv() {
 }
 
 function checkCheStatus() {
-  if [ "$RH_CHE_IS_V_FIVE" == "true" ]; then
-    RH_CHE_DEPLOYMENT_OC_STATUS=$(oc get dc che -o json)
-  else
-    RH_CHE_DEPLOYMENT_OC_STATUS=$(oc get dc rhche -o json)
-  fi
+  RH_CHE_DEPLOYMENT_OC_STATUS=$(oc get dc rhche -o json)
   export RH_CHE_STATUS_PROGRESS=$(echo "$RH_CHE_DEPLOYMENT_OC_STATUS" | jq ".status.conditions | map(select(.type == \"Progressing\").status)[]")
   export RH_CHE_STATUS_AVAILABLE=$(echo "$RH_CHE_DEPLOYMENT_OC_STATUS" | jq ".status.conditions | map(select(.type == \"Available\").status)[]")
 }
@@ -96,15 +82,9 @@ function deployPostgres() {
   echo -e "\033[0;92;1mPostreSQL database successfully deployed\033[0m"
 }
 
-# PREPARE VARIABLES FOR V6
-setVars
-
-while getopts ':5hnsu:p:r:t:o:e:b:z' option; do
+# Parse commandline flags
+while getopts ':hnsu:p:r:t:o:e:b:z' option; do
   case "$option" in
-    5) # SET VARIABLES FOR V5 !!MUST COME AS FIRST FLAG!!
-       export RH_CHE_IS_V_FIVE="true"
-       setVars
-       ;;
     h) echo -e "$usage"
        exit 0
        ;;
@@ -168,12 +148,12 @@ fi
 # LOGIN TO OPENSHIFT CONSOLE
 echo -e "\033[1mLogging in to openshift...\033[0m";
 if [ "$RH_CHE_OPENSHIFT_USE_TOKEN" == "true" ]; then
-  if ! (oc login $RH_CHE_OPENSHIFT_URL --insecure-skip-tls-verify=true --token="$RH_CHE_OPENSHIFT_TOKEN" > /dev/null 2>&1); then
+  if ! (oc login ${RH_CHE_OPENSHIFT_URL} --insecure-skip-tls-verify=true --token="$RH_CHE_OPENSHIFT_TOKEN" > /dev/null 2>&1); then
     echo -e "\033[91;1mOpenshift login with token failed\033[0m"
     exit 1
   fi
 else
-  if ! (oc login $RH_CHE_OPENSHIFT_URL --insecure-skip-tls-verify=true -u "$RH_CHE_OPENSHIFT_USERNAME" -p "$RH_CHE_OPENSHIFT_PASSWORD" > /dev/null 2>&1); then
+  if ! (oc login ${RH_CHE_OPENSHIFT_URL} --insecure-skip-tls-verify=true -u "$RH_CHE_OPENSHIFT_USERNAME" -p "$RH_CHE_OPENSHIFT_PASSWORD" > /dev/null 2>&1); then
     echo -e "\033[91;1mOpenshift login failed\033[0m"
     exit 1
   fi
@@ -181,17 +161,11 @@ fi
 echo -e "\033[92;1mLogin successful, creating project \033[34m$RH_CHE_PROJECT_NAMESPACE\033[0;38;5;238m";
 
 # CREATE PROJECT
-if [ "$RH_CHE_IS_V_FIVE" == "true" ]; then
-  if ! (oc project $RH_CHE_PROJECT_NAMESPACE > /dev/null 2>&1); then
-    oc new-project $RH_CHE_PROJECT_NAMESPACE --display-name='RH-Che5 Automated Deployment' > /dev/null 2>&1
-  fi
-else
-  if ! (oc project $RH_CHE_PROJECT_NAMESPACE > /dev/null 2>&1); then
-    oc new-project $RH_CHE_PROJECT_NAMESPACE --display-name='RH-Che6 Automated Deployment' > /dev/null 2>&1
-  fi
+if ! (oc project ${RH_CHE_PROJECT_NAMESPACE} > /dev/null 2>&1); then
+  oc new-project ${RH_CHE_PROJECT_NAMESPACE} --display-name='RH-Che6 Automated Deployment' > /dev/null 2>&1
 fi
 
-if ! (oc get project $RH_CHE_PROJECT_NAMESPACE > /dev/null 2>&1); then
+if ! (oc get project ${RH_CHE_PROJECT_NAMESPACE} > /dev/null 2>&1); then
     echo -e "\033[91;1mProject creation failed.\033[0m"
     exit 1
 else
@@ -215,11 +189,11 @@ cd ../ || exit 1
 if [ "${RH_CHE_RUNNING_STANDALONE_SCRIPT}" == "true" ]; then
   RH_CHE_APP="./rh-che.app.yaml"
   RH_CHE_CONFIG="./rh-che.config.yaml"
-  if ! (curl -L0fs https://raw.githubusercontent.com/redhat-developer/rh-che/$RH_CHE_GITHUB_BRANCH/openshift/rh-che.app.yaml -o ${RH_CHE_APP} > /dev/null 2>&1); then
+  if ! (curl -L0fs https://raw.githubusercontent.com/redhat-developer/rh-che/${RH_CHE_GITHUB_BRANCH}/openshift/rh-che.app.yaml -o ${RH_CHE_APP} > /dev/null 2>&1); then
     echo -e "\033[91;1mCould not download che app definition config!\033[0m"
     exit 1
   fi
-  if ! (curl -L0fs https://raw.githubusercontent.com/redhat-developer/rh-che/$RH_CHE_GITHUB_BRANCH/openshift/rh-che.config.yaml -o ${RH_CHE_CONFIG} > /dev/null 2>&1); then
+  if ! (curl -L0fs https://raw.githubusercontent.com/redhat-developer/rh-che/${RH_CHE_GITHUB_BRANCH}/openshift/rh-che.config.yaml -o ${RH_CHE_CONFIG} > /dev/null 2>&1); then
     echo -e "\033[91;1mCould not download che config yaml!\033[0m"
     exit 1
   fi
@@ -256,24 +230,13 @@ CHE_CONFIG_YAML=$(yq ".\"data\".\"che-keycloak-realm\" = \"NULL\" |
                       .\"data\".\"che.jdbc.password\" = \"$RH_CHE_JDBC_PASSWORD\" | 
                       .\"data\".\"che.jdbc.url\" = \"$RH_CHE_JDBC_URL\" " ${RH_CHE_CONFIG})
 
-if [ "$RH_CHE_IS_V_FIVE" == "true" ]; then
-  CHE_CONFIG_YAML=$(echo "$CHE_CONFIG_YAML" | \
-                    yq ".\"data\".\"che-workspace-che-server-endpoint\" = \"https://che-$RH_CHE_PROJECT_NAMESPACE.dev.rdu2c.fabric8.io/wsmaster/api\" | 
-                        .\"data\".\"che-host\" = \"che-$RH_CHE_PROJECT_NAMESPACE.dev.rdu2c.fabric8.io\" | 
-                        .\"data\".\"infra-bootstrapper-binary-url\" = \"https://che-$RH_CHE_PROJECT_NAMESPACE.dev.rdu2c.fabric8.io/agent-binaries/linux_amd64/bootstrapper/bootstrapper\" | 
-                        .\"data\".\"che-api\" = \"https://che-$RH_CHE_PROJECT_NAMESPACE.dev.rdu2c.fabric8.io/api\" | 
-                        .\"data\".\"che-websocket-endpoint\" = \"wss://che-$RH_CHE_PROJECT_NAMESPACE.dev.rdu2c.fabric8.io/api/websocket\" | 
-                        .\"metadata\".\"name\" = \"che\" ")
-else
-  CHE_CONFIG_YAML=$(echo "$CHE_CONFIG_YAML" | \
-                    yq ".\"data\".\"che-host\" = \"rhche-$RH_CHE_PROJECT_NAMESPACE.dev.rdu2c.fabric8.io\" | 
-                        .\"data\".\"infra-bootstrapper-binary-url\" = \"https://rhche-$RH_CHE_PROJECT_NAMESPACE.dev.rdu2c.fabric8.io/agent-binaries/linux_amd64/bootstrapper/bootstrapper\" | 
-                        .\"data\".\"che-api\" = \"https://rhche-$RH_CHE_PROJECT_NAMESPACE.dev.rdu2c.fabric8.io/api\" | 
-                        .\"data\".\"che-websocket-endpoint\" = \"wss://rhche-$RH_CHE_PROJECT_NAMESPACE.dev.rdu2c.fabric8.io/api/websocket\" | 
-                        .\"metadata\".\"name\" = \"rhche\" ")
-fi
+CHE_CONFIG_YAML=$(echo "$CHE_CONFIG_YAML" | \
+                  yq ".\"data\".\"che-host\" = \"rhche-$RH_CHE_PROJECT_NAMESPACE.dev.rdu2c.fabric8.io\" |
+                      .\"data\".\"infra-bootstrapper-binary-url\" = \"https://rhche-$RH_CHE_PROJECT_NAMESPACE.dev.rdu2c.fabric8.io/agent-binaries/linux_amd64/bootstrapper/bootstrapper\" |
+                      .\"data\".\"che-api\" = \"https://rhche-$RH_CHE_PROJECT_NAMESPACE.dev.rdu2c.fabric8.io/api\" |
+                      .\"data\".\"che-websocket-endpoint\" = \"wss://rhche-$RH_CHE_PROJECT_NAMESPACE.dev.rdu2c.fabric8.io/api/websocket\" |
+                      .\"metadata\".\"name\" = \"rhche\" ")
 
-#echo "$CHE_CONFIG_YAML"
 if ! (echo "$CHE_CONFIG_YAML" | oc apply -f - > /dev/null 2>&1); then
   echo -e "\033[91;1mFailed to apply configmap.\033[0m"
   exit 1
@@ -286,56 +249,38 @@ CHE_APP_CONFIG_YAML=$(echo "$CHE_APP_CONFIG_YAML" | \
                       yq "(.parameters[] | select(.name == \"IMAGE\").value) |= \"$RH_CHE_DOCKER_REPOSITORY\" |
                           (.parameters[] | select(.name == \"IMAGE_TAG\").value) |= \"$RH_CHE_DOCKER_IMAGE_TAG\" | 
                           (.objects[] | select(.kind == \"DeploymentConfig\").spec.template.spec.containers[0].imagePullPolicy) |= \"Always\"")
-if [ "$RH_CHE_IS_V_FIVE" == "true" ]; then
-  CHE_APP_CONFIG_YAML=$(echo "$CHE_APP_CONFIG_YAML" | \
-                        yq "(.objects[] | select(.kind == \"DeploymentConfig\").spec.template.spec.containers[0].env[] | 
-                             select(.name == \"CHE_OPENSHIFT_SERVICE__ACCOUNT_SECRET\").valueFrom) |= {\"configMapKeyRef\":{\"key\":\"service.account.secret\",\"name\":\"che\"}} | 
-                            (.objects[] | select(.kind == \"DeploymentConfig\").spec.template.spec.containers[0].env[] | 
-                             select(.name == \"CHE_OPENSHIFT_SERVICE__ACCOUNT_ID\").valueFrom) |= {\"configMapKeyRef\":{\"key\":\"service.account.id\",\"name\":\"che\"}} | 
-                            (.objects[] | select(.kind == \"DeploymentConfig\").spec.template.spec.containers[0].env[] | 
-                             select(.name == \"CHE_JDBC_PASSWORD\").valueFrom) |= {\"configMapKeyRef\":{\"key\":\"che.jdbc.password\",\"name\":\"che\"}} | 
-                            (.objects[] | select(.kind == \"DeploymentConfig\").spec.template.spec.containers[0].env[] | 
-                             select(.name == \"CHE_JDBC_URL\").valueFrom) |= {\"configMapKeyRef\":{\"key\":\"che.jdbc.url\",\"name\":\"che\"}} | 
-                            (.objects[] | select(.kind == \"DeploymentConfig\").spec.template.spec.containers[0].env[] | 
-                             select(.name == \"CHE_JDBC_USERNAME\").valueFrom) |= {\"configMapKeyRef\":{\"key\":\"che.jdbc.username\",\"name\":\"che\"}}")
-else
-  CHE_APP_CONFIG_YAML=$(echo "$CHE_APP_CONFIG_YAML" | \
-                        yq "(.objects[] | select(.kind == \"DeploymentConfig\").spec.template.spec.containers[0].env[] | 
-                             select(.name == \"CHE_OPENSHIFT_SERVICE__ACCOUNT_SECRET\").valueFrom) |= {\"configMapKeyRef\":{\"key\":\"service.account.secret\",\"name\":\"rhche\"}} | 
-                            (.objects[] | select(.kind == \"DeploymentConfig\").spec.template.spec.containers[0].env[] | 
-                             select(.name == \"CHE_OPENSHIFT_SERVICE__ACCOUNT_ID\").valueFrom) |= {\"configMapKeyRef\":{\"key\":\"service.account.id\",\"name\":\"rhche\"}} | 
-                            (.objects[] | select(.kind == \"DeploymentConfig\").spec.template.spec.containers[0].env[] | 
-                             select(.name == \"CHE_JDBC_PASSWORD\").valueFrom) |= {\"configMapKeyRef\":{\"key\":\"che.jdbc.password\",\"name\":\"rhche\"}} | 
-                            (.objects[] | select(.kind == \"DeploymentConfig\").spec.template.spec.containers[0].env[] | 
-                             select(.name == \"CHE_JDBC_URL\").valueFrom) |= {\"configMapKeyRef\":{\"key\":\"che.jdbc.url\",\"name\":\"rhche\"}} | 
-                            (.objects[] | select(.kind == \"DeploymentConfig\").spec.template.spec.containers[0].env[] | 
-                             select(.name == \"CHE_JDBC_USERNAME\").valueFrom) |= {\"configMapKeyRef\":{\"key\":\"che.jdbc.username\",\"name\":\"rhche\"}}")
-fi
+
+CHE_APP_CONFIG_YAML=$(echo "$CHE_APP_CONFIG_YAML" | \
+                      yq "(.objects[] | select(.kind == \"DeploymentConfig\").spec.template.spec.containers[0].env[] |
+                           select(.name == \"CHE_OPENSHIFT_SERVICE__ACCOUNT_SECRET\").valueFrom) |= {\"configMapKeyRef\":{\"key\":\"service.account.secret\",\"name\":\"rhche\"}} |
+                          (.objects[] | select(.kind == \"DeploymentConfig\").spec.template.spec.containers[0].env[] |
+                           select(.name == \"CHE_OPENSHIFT_SERVICE__ACCOUNT_ID\").valueFrom) |= {\"configMapKeyRef\":{\"key\":\"service.account.id\",\"name\":\"rhche\"}} |
+                          (.objects[] | select(.kind == \"DeploymentConfig\").spec.template.spec.containers[0].env[] |
+                           select(.name == \"CHE_JDBC_PASSWORD\").valueFrom) |= {\"configMapKeyRef\":{\"key\":\"che.jdbc.password\",\"name\":\"rhche\"}} |
+                          (.objects[] | select(.kind == \"DeploymentConfig\").spec.template.spec.containers[0].env[] |
+                           select(.name == \"CHE_JDBC_URL\").valueFrom) |= {\"configMapKeyRef\":{\"key\":\"che.jdbc.url\",\"name\":\"rhche\"}} |
+                          (.objects[] | select(.kind == \"DeploymentConfig\").spec.template.spec.containers[0].env[] |
+                           select(.name == \"CHE_JDBC_USERNAME\").valueFrom) |= {\"configMapKeyRef\":{\"key\":\"che.jdbc.username\",\"name\":\"rhche\"}}")
 
 if ! (echo "$CHE_APP_CONFIG_YAML" | oc process -f - | oc apply -f - > /dev/null 2>&1); then
   echo -e "\033[91;1mFailed to process che config\033[0m"
   exit 1
 fi
 
-CHE_STARTUP_TIMEOUT=256
+CHE_STARTUP_TIMEOUT=300
 while [[ "${RH_CHE_STATUS_PROGRESS}" != "\"True\"" || "${RH_CHE_STATUS_AVAILABLE}" != "\"True\"" ]] && [ ${CHE_STARTUP_TIMEOUT} -gt 0 ]; do
   sleep 1
   checkCheStatus
   echo -e "\033[0;38;5;60mChe-server status: Available:\033[0;1m$RH_CHE_STATUS_AVAILABLE \033[0;38;5;60mProgressing:\033[0;1m$RH_CHE_STATUS_PROGRESS \033[0;38;5;60mTimeout:\033[0;1m$CHE_STARTUP_TIMEOUT\033[0m"
   CHE_STARTUP_TIMEOUT=$((CHE_STARTUP_TIMEOUT-1))
 done
-if [ $CHE_STARTUP_TIMEOUT == 0 ]; then
+if [ ${CHE_STARTUP_TIMEOUT} == 0 ]; then
   echo -e "\033[91;1mFailed to start che-server: timed out\033[0m"
   exit 1
 fi
 
-if [ "$RH_CHE_IS_V_FIVE" == "true" ]; then
-  oc annotate --overwrite=true route/che kubernetes.io/tls-acme=true
-  echo -e "\033[92;1mSUCCESS: Che deployed on \033[34mhttps://che-$RH_CHE_PROJECT_NAMESPACE.dev.rdu2c.fabric8.io/\033[0m"
-else
-  oc annotate --overwrite=true route/rhche kubernetes.io/tls-acme=true
-  echo -e "\033[92;1mSUCCESS: Rh-Che deployed on \033[34mhttps://rhche-$RH_CHE_PROJECT_NAMESPACE.dev.rdu2c.fabric8.io/\033[0m"
-fi
+oc annotate --overwrite=true route/rhche kubernetes.io/tls-acme=true
+echo -e "\033[92;1mSUCCESS: Rh-Che deployed on \033[34mhttps://rhche-$RH_CHE_PROJECT_NAMESPACE.dev.rdu2c.fabric8.io/\033[0m"
 
 # CLEANUP
 if [ "$RH_CHE_DEPLOY_SCRIPT_CLEANUP" = true ]; then
