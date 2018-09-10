@@ -11,9 +11,14 @@
  */
 package com.redhat.che.multitenant;
 
+import static com.redhat.che.multitenant.pvc.NoneWorkspacePVCStrategy.NONE_STRATEGY;
+
 import com.google.inject.AbstractModule;
+import com.google.inject.multibindings.MapBinder;
+import com.redhat.che.multitenant.pvc.NoneWorkspacePVCStrategy;
 import org.eclipse.che.inject.DynaModule;
 import org.eclipse.che.workspace.infrastructure.kubernetes.KubernetesClientFactory;
+import org.eclipse.che.workspace.infrastructure.kubernetes.namespace.pvc.WorkspaceVolumesStrategy;
 import org.eclipse.che.workspace.infrastructure.openshift.OpenShiftClientFactory;
 import org.eclipse.che.workspace.infrastructure.openshift.OpenShiftEnvironmentProvisioner;
 import org.eclipse.che.workspace.infrastructure.openshift.project.OpenShiftProjectFactory;
@@ -33,5 +38,9 @@ public class Fabric8MultiTenantModule extends AbstractModule {
     bind(KubernetesClientFactory.class).to(Fabric8OpenShiftClientFactory.class);
     bind(OpenShiftProjectFactory.class).to(Fabric8OpenShiftProjectFactory.class);
     bind(OpenShiftEnvironmentProvisioner.class).to(RhCheInfraEnvironmentProvisioner.class);
+
+    MapBinder<String, WorkspaceVolumesStrategy> volumesStrategies =
+        MapBinder.newMapBinder(binder(), String.class, WorkspaceVolumesStrategy.class);
+    volumesStrategies.addBinding(NONE_STRATEGY).to(NoneWorkspacePVCStrategy.class);
   }
 }
