@@ -11,10 +11,12 @@
  */
 package com.redhat.che.multitenant;
 
+import static com.redhat.che.multitenant.pvc.EmptyDirVolumeStrategy.EMPTY_DIR_STRATEGY;
 import static com.redhat.che.multitenant.pvc.NoneWorkspacePVCStrategy.NONE_STRATEGY;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.MapBinder;
+import com.redhat.che.multitenant.pvc.EmptyDirVolumeStrategy;
 import com.redhat.che.multitenant.pvc.NoneWorkspacePVCStrategy;
 import org.eclipse.che.inject.DynaModule;
 import org.eclipse.che.workspace.infrastructure.kubernetes.KubernetesClientFactory;
@@ -42,5 +44,6 @@ public class Fabric8MultiTenantModule extends AbstractModule {
     MapBinder<String, WorkspaceVolumesStrategy> volumesStrategies =
         MapBinder.newMapBinder(binder(), String.class, WorkspaceVolumesStrategy.class);
     volumesStrategies.addBinding(NONE_STRATEGY).to(NoneWorkspacePVCStrategy.class);
+    volumesStrategies.addBinding(EMPTY_DIR_STRATEGY).to(EmptyDirVolumeStrategy.class);
   }
 }
