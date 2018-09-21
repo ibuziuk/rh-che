@@ -39,7 +39,7 @@ public class Fabric8MultiTenantModule extends AbstractModule {
     MapBinder<String, WorkspaceVolumesStrategy> volumesStrategies =
         MapBinder.newMapBinder(binder(), String.class, WorkspaceVolumesStrategy.class);
     volumesStrategies
-        .addBinding("common-ephemeral")
+        .addBinding(CommonPVCStrategyWithEphemeralWorkspacesSupport.COMMON_EPHEMERAL_STRATEGY)
         .to(CommonPVCStrategyWithEphemeralWorkspacesSupport.class);
   }
 }

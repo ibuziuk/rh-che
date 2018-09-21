@@ -29,6 +29,7 @@ import org.eclipse.che.api.core.model.workspace.runtime.RuntimeIdentity;
 import org.eclipse.che.api.workspace.server.WorkspaceManager;
 import org.eclipse.che.api.workspace.server.model.impl.WorkspaceImpl;
 import org.eclipse.che.api.workspace.server.spi.InfrastructureException;
+import org.eclipse.che.api.workspace.server.spi.InternalInfrastructureException;
 import org.eclipse.che.workspace.infrastructure.kubernetes.Names;
 import org.eclipse.che.workspace.infrastructure.kubernetes.environment.KubernetesEnvironment;
 import org.eclipse.che.workspace.infrastructure.kubernetes.namespace.KubernetesNamespaceFactory;
@@ -45,6 +46,7 @@ import org.eclipse.che.workspace.infrastructure.kubernetes.namespace.pvc.PVCSubP
  * @author Ilya Buziuk
  */
 public class CommonPVCStrategyWithEphemeralWorkspacesSupport extends CommonPVCStrategy {
+  public static final String COMMON_EPHEMERAL_STRATEGY = "common_ephemeral";
   private static final String MOUNT_SOURCES_ATTRIBUTE = "mountSources";
 
   private final WorkspaceManager workspaceManager;
@@ -84,9 +86,7 @@ public class CommonPVCStrategyWithEphemeralWorkspacesSupport extends CommonPVCSt
 
   @Override
   public void cleanup(String workspaceId) throws InfrastructureException {
-    if (!isEphemeral(workspaceId)) {
-      super.cleanup(workspaceId);
-    }
+    super.cleanup(workspaceId);
   }
 
   @Override
@@ -131,6 +131,7 @@ public class CommonPVCStrategyWithEphemeralWorkspacesSupport extends CommonPVCSt
               new VolumeBuilder()
                   .withName(uniqueVolumeMountName)
                   .withNewEmptyDir()
+                  .withMedium("Memory")
                   .endEmptyDir()
                   .build());
     }
@@ -149,16 +150,18 @@ public class CommonPVCStrategyWithEphemeralWorkspacesSupport extends CommonPVCSt
 
   /**
    * @param workspaceId
-   * @return true if workspace config contains `mountSources` attribute which is set to true, false
-   *     otherwise
+   * @return true if workspace config contains `mountSources` attribute which is set to false 
+   * 
+   * @throws InternalInfrastructureException
    */
-  private boolean isEphemeral(String workspaceId) {
+  private boolean isEphemeral(String workspaceId) throws InternalInfrastructureException {
     try {
       WorkspaceImpl workspace = workspaceManager.getWorkspace(workspaceId);
       String mountSources = workspace.getConfig().getAttributes().get(MOUNT_SOURCES_ATTRIBUTE);
-      return !Boolean.parseBoolean(mountSources);
+      return "false".equals(mountSources);
     } catch (NotFoundException | ServerException e) {
-      throw new RuntimeException("Failed to load workspace info" + e.getMessage(), e);
+      throw new InternalInfrastructureException(
+          "Failed to load workspace info" + e.getMessage(), e);
     }
   }
 }
