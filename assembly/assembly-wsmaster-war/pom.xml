@@ -61,10 +61,6 @@
             <artifactId>fabric8-multi-tenant-manager</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.redhat.che</groupId>
-            <artifactId>ls-bayesian-agent</artifactId>
-        </dependency>
-        <dependency>
             <groupId>io.sentry</groupId>
             <artifactId>sentry</artifactId>
         </dependency>
@@ -133,21 +129,6 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>org.eclipse.che.core</groupId>
-                <artifactId>che-core-dynamodule-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>generate</id>
-                        <goals>
-                            <goal>build</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <scanWarDependencies>true</scanWarDependencies>
-                </configuration>
-            </plugin>
-            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-war-plugin</artifactId>
                 <configuration>
@@ -172,8 +153,12 @@
                             <ignoredUnusedDeclaredDependencies>
                                 <dep>io.sentry:sentry</dep>
                                 <dep>io.sentry:sentry-logback</dep>
+                                <dep>com.redhat.che:che-plugin-analytics-wsmaster</dep>
+                                <dep>com.redhat.che:fabric8-cdn-support</dep>
+                                <dep>com.redhat.che:fabric8-end2end-flow</dep>
                                 <dep>com.redhat.che:fabric8-ide-stacks</dep>
                                 <dep>org.eclipse.che.multiuser:che-multiuser-keycloak-server</dep>
+                                <dep>org.eclipse.che.multiuser:che-multiuser-personal-account</dep>
                             </ignoredUnusedDeclaredDependencies>
                         </configuration>
                     </execution>

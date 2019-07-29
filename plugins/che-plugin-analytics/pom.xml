@@ -25,6 +25,5 @@
     <name>Fabric8 IDE :: Plugins :: Analytics</name>
     <modules>
         <module>che-plugin-analytics-wsmaster</module>
-        <module>che-plugin-analytics-wsagent</module>
     </modules>
 </project>
