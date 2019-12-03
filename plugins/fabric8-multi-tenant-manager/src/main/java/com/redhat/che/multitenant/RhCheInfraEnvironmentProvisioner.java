@@ -113,9 +113,9 @@ public class RhCheInfraEnvironmentProvisioner extends OpenShiftEnvironmentProvis
         serviceAccountProvisioner,
         certificateProvisioner,
         vcsSshKeysProvisioner,
-            gitConfigProvisioner,
-            previewUrlEndpointsProvisioner,
-            vcsSslCertificateProvisioner);
+        gitConfigProvisioner,
+        previewUrlEndpointsProvisioner,
+        vcsSslCertificateProvisioner);
 
     this.openshiftUserTokenProvider = openshiftUserTokenProvider;
     this.tenantDataProvider = tenantDataProvider;
