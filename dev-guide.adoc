@@ -196,9 +196,6 @@ this will create / update a project with the display name `RH-Che6 Automated Dep
 The dev-cluster deployment script uses the yaml files (`rh-che.app.yaml`, `rh-che.config.yaml`) in `./openshift` while the minishift addon uses the yaml files in `./openshift/minishift-addons/rhche/templates`. These templates are slightly different.
 ====
 
-=== Deploying to OpenShift in general
-To be completed
-
 == Monitoring in production
 See link:./documentation/monitoring/monitoring.adoc[Monitoring docs].
 
