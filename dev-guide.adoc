@@ -280,11 +280,6 @@ A shortcut, if _only a single workspace is running_, is to use a selector to aut
 oc port-forward $(oc get pods --selector="che.workspace_id" --no-headers=true -o custom-columns=:metadata.name) 4403
 ----
 
-[NOTE]
-====
-On older versions of OpenShift, it may be also necessary to create a server in the workspace config (in the dashboard) that exposes your JPDA debug port. This is because the JPDA debug server is by default removed from workspaces. It seems that, at least on OpenShift 3.11, you can port-forward to non-exposed ports on a Pod. 
-====
-
 == All-in-one build and update commands
 These commands will do a full build (skipping tests) of rh-che and rollout a new deployment. They assume that they are being executed from this repositorys root directory, and that environment variables
 [source,bash]
