@@ -12,7 +12,7 @@
 * [How to build it](#how-to-build-it)
 * [PR-Check details](#pr-check-details)
 
-## Job statuses
+## Job statuses / Test ibuziuk
 
 #### Periodic functional tests
 
