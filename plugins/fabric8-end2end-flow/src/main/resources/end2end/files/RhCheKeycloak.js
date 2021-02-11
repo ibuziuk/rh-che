@@ -10,6 +10,7 @@
  *   Red Hat, Inc. - initial API and implementation
  */
 const osio_msg_relogin_or_contact_support = "<br>You may want to <a href='' onclick='return osioProvisioningLogout()'>use a different account</a><br>or <a href='https://mattermost.eclipse.org/eclipse/channels/eclipse-che'>contact support</a>.";
+const osio_msg_eol = "Eclipse Che hosted by Red Hat on OpenShift is going to be shut down on <strong>March 1, 2021 at 00:01 GMT</strong>.A new service based on <a href='https://developers.redhat.com/developer-sandbox#assembly-field-sections-59571'>CodeReady Workspaces</a> is available now. <a href='https://developers.redhat.com/developer-sandbox'>Developer Sandbox for Red Hat OpenShift</a> provides more details about the new service."
 const osio_msg_provisioning = "Creating your <strong>OpenShift</strong> account";
 const osio_msg_linking_account = "Linking your <strong>OpenShift</strong> account";
 const osio_msg_setting_up_namespaces = "Setting up your <strong>OpenShift.io</strong> environment";
@@ -452,6 +453,8 @@ function initAnalytics(writeKey){
     addReadonlyProp(window.osioCheLoginFlow, "osio_msg_error_user_verification", osio_msg_error_user_verification);
     addReadonlyProp(window.osioCheLoginFlow, "telemetry_event_enter_provisioning_page_for_che", telemetry_event_enter_provisioning_page_for_che);
     addReadonlyProp(window.osioCheLoginFlow, "osio_msg_provisioning", osio_msg_provisioning);
+    addReadonlyProp(window.osioCheLoginFlow, "osio_msg_eol", osio_msg_eol);
+
     
     var scripts = document.getElementsByTagName("script");
     var originalKeycloakScript;
