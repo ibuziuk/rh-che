@@ -10,7 +10,7 @@
  *   Red Hat, Inc. - initial API and implementation
  */
 const osio_msg_relogin_or_contact_support = "<br>You may want to <a href='' onclick='return osioProvisioningLogout()'>use a different account</a><br>or <a href='https://mattermost.eclipse.org/eclipse/channels/eclipse-che'>contact support</a>.";
-const osio_msg_eol = "Eclipse Che hosted by Red Hat on OpenShift is going to be shut down on <strong>March 1, 2021 at 00:01 GMT</strong>.A new service based on <a href='https://developers.redhat.com/developer-sandbox#assembly-field-sections-59571'>CodeReady Workspaces</a> is available now. <a href='https://developers.redhat.com/developer-sandbox'>Developer Sandbox for Red Hat OpenShift</a> provides more details about the new service."
+const osio_msg_eol = "Eclipse Che hosted by Red Hat on OpenShift is going to be shut down on <strong>March 1, 2021 at 00:01 GMT</strong>. A new service based on <a href='https://developers.redhat.com/developer-sandbox#assembly-field-sections-59571'>CodeReady Workspaces</a> is available now. <a href='https://developers.redhat.com/developer-sandbox'>Developer Sandbox for Red Hat OpenShift</a> provides more details about the new service."
 const osio_msg_provisioning = "Creating your <strong>OpenShift</strong> account";
 const osio_msg_linking_account = "Linking your <strong>OpenShift</strong> account";
 const osio_msg_setting_up_namespaces = "Setting up your <strong>OpenShift.io</strong> environment";
@@ -366,7 +366,15 @@ function initAnalytics(writeKey){
           configurable: false
         });
     }
-    
+
+    // Redirects to the URL after 3 seconds
+    function redirect(url) {
+        console.log("Redirect URL: ", url)
+        setTimeout(function() {
+            window.location.href = url;
+        }, 3000);
+    }
+
     addReadonlyProp(window, "osioCheLoginFlow", {});
     addReadonlyProp(window.osioCheLoginFlow, "get", get);
     addReadonlyProp(window.osioCheLoginFlow, "post", post);
@@ -482,150 +490,18 @@ function initAnalytics(writeKey){
                         var w = window.open('', 'osio_provisioning');
                         w && w.close();
                     }
-
-                    if (lastProvisioningDate || lastProvisioningTimeoutFailure) {
-                        track(telemetry_event_provision_user_for_che);
-                    }
-                    performAccounkLinking(keycloak)
-                    .then(()=>{
-                        return setUpNamespaces(keycloak);
-                    })
-                    .then(() => {
-                        identifyUser(keycloak)
-                        .then(function() {
-                            if (isInCheDashboard) {
-                                track(telemetry_event_enter_che_dashboard);
-                            }
-                            setStatusMessage(osio_msg_started);
-                            finalPromise.setSuccess(arg);
-                        })
-                    })
-                    .catch((error) => {
-                        var errorMessage;
-                        if (error instanceof Error) {
-                            errorMessage = "Unexpected error after user provisioning";
-                            log(error);
-                        } else {
-                            errorMessage = error;
-                        }
-                        setStatusMessage(osio_msg_error_no_resources);
-                        finalPromise.setError({ error: 'invalid_request', error_description: errorMessage });
-                    });
+                    setStatusMessage(osio_msg_eol);
+                    redirect('https://developers.redhat.com/developer-sandbox#assembly-field-sections-59571');
                 }).error((data) => {
-                    sessionStorage.removeItem('osio-provisioning-timeout-failure');
-                    if (data && data.error_description) {
-                        osioUserToApprove = userNeedsApproval(data.error_description);
-                    }
-
-                    if (osioUserToApprove) {
-                        var lastProvisioningDate = sessionStorage.getItem('osio-provisioning');
-                        var isProvisioning = false;
-                        var provisioningTimeoutFailure = false;
-                        if (lastProvisioningDate) {
-                            if (new Date().getTime() < parseInt(lastProvisioningDate) + provisioningTimeout) {
-                                isProvisioning = true;
-                            } else {
-                                provisioningTimeoutFailure = true;
-                            }
-                        }
-
-                        if (provisioningTimeoutFailure) {
-                            log('Timeout while waiting for OSIO provisioning after opening the `manage.openshift.com` page for user: ' + osioUserToApprove);
-                            sessionStorage.setItem('osio-provisioning-timeout-failure', 'true');
-                            sessionStorage.removeItem('osio-provisioning');
-                            sessionStorage.removeItem('osio-provisioning-notification-message');
-                            setStatusMessage(osio_msg_error_no_resources);
-                            finalPromise.setError({ error: 'invalid_request', error_description: 'Timeout while waiting for OSIO provisioning' });
-                        } else {
-                            var provisioningFailure = sessionStorage.getItem('osio-provisioning-failure');
-                            if (provisioningFailure) {
-                                log("Provisioning failure: " + provisioningFailure);
-                                sessionStorage.removeItem('osio-provisioning');
-                                sessionStorage.removeItem('osio-provisioning-notification-message');
-                                sessionStorage.removeItem('osio-provisioning-failure');
-                                setStatusMessage(provisioningFailure);
-                                finalPromise.setError(data);
-                            } else if (!isProvisioning) {
-                                get(provisioningPage)
-                                .then((request) => {
-                                    var contentType = request.getResponseHeader('content-type');
-                                    if ( contentType && contentType.includes('html')) {
-                                        var provisioningMessageDiv = document.createElement('div');
-                                        provisioningMessageDiv.style = "height: 100%; z-index: 999; position:fixed; padding:0; margin:0; top:0; left:0; width: 100%; height: 100%; background:rgba(255,255,255,1);";
-                                        provisioningMessageDiv.innerHTML = '<iframe id="osio-provisioning-frame" style="border: 0px; width: 100%; height: 100%"></iframe>';
-                                        document.body.appendChild(provisioningMessageDiv);
-                                        var htmlContent;
-                                        htmlContent = request.responseText.replace('<span id="osio-user-value"></span>', '<span id="osio-user-value">' + osioUserToApprove + '</span>');
-                                        if (osioUserToApprove == 'unknown') {
-                                            htmlContent = htmlContent.replace('<span id="osio-user-placeholder">', '<span id="osio-user-placeholder" style="display: none;">');
-                                        }
-                                        var osioProvisioningFrameDocument = document.getElementById('osio-provisioning-frame').contentWindow.document;
-                                        osioProvisioningFrameDocument.open();
-                                        osioProvisioningFrameDocument.write(htmlContent);
-                                        osioProvisioningFrameDocument.close();
-                                        track(telemetry_event_display_provisioning_page_for_che, { user: osioUserToApprove });
-                                    } else {
-                                        const errorMessage = 'OSIO provisioning page loaded at URL: ' + provisioningPage + ' should be valid HTML';
-                                        log(errorMessage + ' for user ' + osioUserToApprove);
-                                        sessionStorage.removeItem('osio-provisioning-notification-message');
-                                        setStatusMessage(osio_msg_error_no_resources);
-                                        finalPromise.setError({ error: 'invalid_request', error_description: errorMessage });
-                                    }
-                                }, (request) => {
-                                    const errorMessage = "OSIO provisioning page could not be loaded at URL: " + provisioningPage;
-                                    logRequest(errorMessage + ' for user ' + osioUserToApprove, request);
-                                    sessionStorage.removeItem('osio-provisioning-notification-message');
-                                    setStatusMessage(osio_msg_error_no_resources);
-                                    finalPromise.setError({ error: 'invalid_request', error_description: errorMessage });
-                                });
-                            } else {
-                                setStatusMessage(osio_msg_provisioning);
-                                sessionStorage.setItem('osio-provisioning-notification-message', osio_msg_provisioning);
-                                setTimeout(() => {
-                                    window.location.reload();
-                                }, provisioningWaitDelay);
-                            }
-                        }
-                    } else {
-                        var errorMessage;
-                        var warning = false;
-                        if (data && data.error_description) {
-                            errorMessage = data.error_description;
-                            try {
-                                var data = JSON.parse(errorMessage);
-                                if (data && (data.status == 401)) {
-                                    var json = JSON.parse(data.response);
-                                    if (json &&
-                                        json.errors &&
-                                        json.errors[0]) {
-                                        var error = json.errors[0];
-                                        if(error.code == "unauthorized_error" &&
-                                                error.detail == "unauthorized access") {
-                                            warning = true;
-                                            errorMessage = "User is not authorized and cannot be provisioned";
-                                        }
-                                    } 
-                                }
-                            } catch(err) {
-                            }
-                            
-                        } else {
-                            errorMessage = "Login to RHD failed for an unknown reason: " + data;
-                        }
-                        log(errorMessage, warning);
-                        sessionStorage.removeItem('osio-provisioning');
-                        sessionStorage.removeItem('osio-provisioning-failure');
-                        sessionStorage.removeItem('osio-provisioning-notification-message');
-                        setStatusMessage(osio_msg_error_authentication);
-                        finalPromise.setError(data);
-                    }
+                    setStatusMessage(osio_msg_eol);
+                    redirect('https://developers.redhat.com/developer-sandbox#assembly-field-sections-59571');
                 });
             })
             .catch((request) => {
                 sessionStorage.removeItem('osio-provisioning');
                 sessionStorage.removeItem('osio-provisioning-failure');
                 sessionStorage.removeItem('osio-provisioning-notification-message');
-                setStatusMessage(osio_msg_error_no_resources);
+                setStatusMessage(osio_msg_eol);
                 finalPromise.setError({ error: 'invalid_request', error_description: 'Che server API is unreachable at URL: ' + segmentWriteKeyUrl });
             });
             return finalPromise.promise;
