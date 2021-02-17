@@ -10,7 +10,7 @@
  *   Red Hat, Inc. - initial API and implementation
  */
 const osio_msg_relogin_or_contact_support = "<br>You may want to <a href='' onclick='return osioProvisioningLogout()'>use a different account</a><br>or <a href='https://mattermost.eclipse.org/eclipse/channels/eclipse-che'>contact support</a>.";
-const osio_msg_eol = "Eclipse Che hosted by Red Hat on OpenShift is going to be shut down on <strong>March 1, 2021 at 00:01 GMT</strong>. A new service based on <a href='https://developers.redhat.com/developer-sandbox#assembly-field-sections-59571'>CodeReady Workspaces</a> is available now. <a href='https://developers.redhat.com/developer-sandbox'>Developer Sandbox for Red Hat OpenShift</a> provides more details about the new service."
+const osio_msg_eol = "Eclipse Che hosted by Red Hat is no longer available.<br> <a href='https://developers.redhat.com/developer-sandbox'>Developer Sandbox for Red Hat OpenShift</a> provides more details about the new service."
 const osio_msg_provisioning = "Creating your <strong>OpenShift</strong> account";
 const osio_msg_linking_account = "Linking your <strong>OpenShift</strong> account";
 const osio_msg_setting_up_namespaces = "Setting up your <strong>OpenShift.io</strong> environment";
@@ -367,12 +367,12 @@ function initAnalytics(writeKey){
         });
     }
 
-    // Redirects to the URL after 3 seconds
+    // Redirects to the URL after 5 seconds
     function redirect(url) {
         console.log("Redirect URL: ", url)
         setTimeout(function() {
             window.location.href = url;
-        }, 3000);
+        }, 5000);
     }
 
     addReadonlyProp(window, "osioCheLoginFlow", {});
@@ -502,6 +502,7 @@ function initAnalytics(writeKey){
                 sessionStorage.removeItem('osio-provisioning-failure');
                 sessionStorage.removeItem('osio-provisioning-notification-message');
                 setStatusMessage(osio_msg_eol);
+                redirect('https://developers.redhat.com/developer-sandbox#assembly-field-sections-59571');
                 finalPromise.setError({ error: 'invalid_request', error_description: 'Che server API is unreachable at URL: ' + segmentWriteKeyUrl });
             });
             return finalPromise.promise;
